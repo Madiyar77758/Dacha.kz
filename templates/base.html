@@ -1,0 +1,89 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Dacha.kz — аренда дач, коттеджей и зон отдыха{% endblock %}</title>
+  <meta name="description" content="Аренда загородных дач, коттеджей, бань и глэмпинга в Казахстане. Найдите и забронируйте онлайн.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏡</text></svg>">
+</head>
+<body>
+<header class="nav">
+  <div class="container nav-inner">
+    <a class="logo" href="{% url 'home' %}" title="На главную"><span class="mark">🏡</span>Dacha<span>.kz</span></a>
+    <nav class="nav-menu">
+      <a class="nav-link" href="{% url 'home' %}">🔍 <span class="hide-sm">Поиск</span></a>
+      {% if user.is_authenticated %}
+        <a class="nav-link" href="{% url 'favorites' %}">❤️ <span class="hide-sm">Избранное</span></a>
+        <a class="nav-link" href="{% url 'my_bookings' %}">🧳 <span class="hide-sm">Мои брони</span></a>
+        {% if user.is_host %}
+          <a class="nav-link" href="{% url 'host_dashboard' %}">📋 <span class="hide-sm">Кабинет хоста</span></a>
+        {% else %}
+          <a class="nav-link" href="{% url 'become_host' %}">✨ <span class="hide-sm">Стать хостом</span></a>
+        {% endif %}
+      {% endif %}
+    </nav>
+    <div class="nav-right">
+      {% if user.is_authenticated %}
+        <span class="nav-user" title="{{ user }}">
+          <span class="avatar">{{ user.first_name|first|default:user.username|first|upper }}</span>
+          <span class="hide-sm">{{ user.first_name|default:user.username }}</span>
+        </span>
+        <form action="{% url 'logout' %}" method="post" style="margin:0">{% csrf_token %}
+          <button class="btn btn-ghost btn-sm">Выйти</button>
+        </form>
+      {% else %}
+        <a class="nav-link" href="{% url 'login' %}">Войти</a>
+        <a class="btn btn-sm" href="{% url 'signup' %}">Регистрация</a>
+      {% endif %}
+    </div>
+  </div>
+</header>
+
+<main>
+  {# гарантирует установку csrftoken cookie для AJAX (избранное) #}
+  <span hidden>{% csrf_token %}</span>
+  {% if messages %}
+    <div class="container" style="margin-top:16px">
+      {% for m in messages %}
+        <div class="msg {{ m.tags }}">
+          <span>{% if 'success' in m.tags %}✅{% elif 'error' in m.tags %}⚠️{% else %}ℹ️{% endif %}</span>
+          <span>{{ m }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  {% block content %}{% endblock %}
+</main>
+
+<footer>
+  <div class="container">
+    <div class="cols">
+      <div>
+        <div class="logo"><span class="mark">🏡</span>Dacha<span>.kz</span></div>
+        <p style="max-width:340px;color:#9fb3a5;font-size:14px">Маркетплейс загородного отдыха в Казахстане: дачи, коттеджи, бани и глэмпинг рядом с городом.</p>
+      </div>
+      <div>
+        <h4>Гостям</h4>
+        <a href="{% url 'home' %}">Поиск жилья</a>
+        <a href="{% url 'my_bookings' %}">Мои брони</a>
+        <a href="#">Как это работает</a>
+      </div>
+      <div>
+        <h4>Хостам</h4>
+        <a href="{% url 'become_host' %}">Сдать жильё</a>
+        <a href="#">Условия и комиссия</a>
+        <a href="#">Поддержка</a>
+      </div>
+    </div>
+    <div class="copy">© {% now "Y" %} Dacha.kz · MVP-демо маркетплейса загородного отдыха</div>
+  </div>
+</footer>
+<script src="{% static 'js/app.js' %}"></script>
+</body>
+</html>

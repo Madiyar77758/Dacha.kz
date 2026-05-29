@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% load humanize ru %}
+{% block content %}
+
+<section class="hero">
+  <div class="container">
+    <span class="eyebrow">🌿 Более {{ properties|length }} {{ properties|length|plural:"объект,объекта,объектов" }} по всему Казахстану</span>
+    <h1>Загородный отдых начинается здесь</h1>
+    <p>Дачи, коттеджи, бани и глэмпинг. Найдите и забронируйте за пару минут.</p>
+  </div>
+</section>
+
+<div class="container searchwrap">
+  <form class="searchbar" method="get" action="{% url 'home' %}">
+    {% for a in amenity_codes %}<input type="hidden" name="amenity" value="{{ a }}">{% endfor %}
+    <input type="hidden" name="sort" value="{{ sort }}">
+    <div class="field">
+      <label>📍 Направление</label>
+      <input type="text" name="city" value="{{ filters.city }}" placeholder="Город или посёлок">
+    </div>
+    <div class="field">
+      <label>📅 Заезд</label>
+      <input type="date" name="check_in" value="{{ filters.check_in }}">
+    </div>
+    <div class="field">
+      <label>📅 Выезд</label>
+      <input type="date" name="check_out" value="{{ filters.check_out }}">
+    </div>
+    <div class="field">
+      <label>👥 Гостей</label>
+      <input type="number" name="guests" min="1" value="{{ filters.guests }}" placeholder="2">
+    </div>
+    <div class="go"><button class="btn btn-accent">🔍 Найти</button></div>
+  </form>
+</div>
+
+<section class="container" style="padding-bottom:60px">
+  <div class="results-layout">
+
+    <!-- ===== БОКОВЫЕ ФИЛЬТРЫ (как у Booking.com) ===== -->
+    <aside class="sidebar">
+      <form method="get" action="{% url 'home' %}" id="filterForm">
+        {# Сохраняем параметры поиска чтобы фильтры не сбивали их #}
+        <input type="hidden" name="city"      value="{{ filters.city }}">
+        <input type="hidden" name="check_in"  value="{{ filters.check_in }}">
+        <input type="hidden" name="check_out" value="{{ filters.check_out }}">
+        <input type="hidden" name="guests"    value="{{ filters.guests }}">
+        <input type="hidden" name="sort"      value="{{ sort }}">
+
+        <div class="sblock">
+          <div class="sblock-head">Бюджет за сутки, ₸</div>
+          <div class="price-inputs">
+            <input type="number" name="price_min" min="0" step="1000" value="{{ filters.price_min }}" placeholder="от">
+            <span>—</span>
+            <input type="number" name="price_max" min="0" step="1000" value="{{ filters.price_max }}" placeholder="до">
+          </div>
+        </div>
+
+        <div class="sblock">
+          <div class="sblock-head">Тип объекта</div>
+          {% for val,label in types %}
+            <label class="scheck">
+              <input type="radio" name="type" value="{{ val }}" {% if filters.type == val %}checked{% endif %}> {{ label }}
+            </label>
+          {% endfor %}
+          <label class="scheck"><input type="radio" name="type" value="" {% if not filters.type %}checked{% endif %}> Любой</label>
+        </div>
+
+        <div class="sblock">
+          <div class="sblock-head">Удобства</div>
+          {% for a in amenities %}
+            <label class="scheck">
+              <input type="checkbox" name="amenity" value="{{ a.code }}" {% if a.code in amenity_codes %}checked{% endif %}>
+              {{ a.icon }} {{ a.name }}
+            </label>
+          {% endfor %}
+        </div>
+
+        <button class="btn btn-block" type="submit">Применить</button>
+        <a class="btn btn-ghost btn-block" style="margin-top:8px" href="{% url 'home' %}">Сбросить</a>
+      </form>
+    </aside>
+
+    <!-- ===== ВЫДАЧА ===== -->
+    <div class="results-main">
+
+      <!-- Сортировка -->
+      <div class="sort-row">
+        <span class="help">{{ properties|length }} {{ properties|length|plural:"объект,объекта,объектов" }}</span>
+        <div class="sort-tabs">
+          {% for val,label in sort_options %}
+            <a class="sort-tab {% if sort == val %}active{% endif %}"
+               href="?{% for k,v in filters.items %}{% if k != 'sort' %}{{ k }}={{ v }}&{% endif %}{% endfor %}sort={{ val }}">{{ label }}</a>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Карточки -->
+      <div class="results-grid">
+        {% for p in properties %}
+        <a class="rcard" href="{% url 'property_detail' p.pk %}?check_in={{ filters.check_in }}&check_out={{ filters.check_out }}&guests={{ filters.guests }}">
+
+          <!-- Фото -->
+          <div class="rcard-img">
+            <img src="{{ p.cover }}" alt="{{ p.title }}" loading="lazy">
+            <span class="rcard-type">{{ p.get_type_display }}</span>
+            <button type="button" class="fav fav-btn {% if p.id in favorite_ids %}active{% endif %}"
+                    data-id="{{ p.id }}" title="В избранное">
+              {% if p.id in favorite_ids %}❤️{% else %}🤍{% endif %}
+            </button>
+          </div>
+
+          <!-- Информация -->
+          <div class="rcard-info">
+            <div class="rcard-main">
+              <div>
+                <div class="rcard-name">{{ p.title }}</div>
+                <div class="rcard-loc">📍 {{ p.city }}{% if p.region %}, {{ p.region }}{% endif %}</div>
+                <div class="rcard-specs">🛏 {{ p.beds }} мест &nbsp;·&nbsp; 🚪 {{ p.rooms }} комн. &nbsp;·&nbsp; 👥 до {{ p.max_guests }}</div>
+                {% if p.amenities.all %}
+                <div class="rcard-amen">{% for a in p.amenities.all|slice:":4" %}<span>{{ a.icon }} {{ a.name }}</span>{% endfor %}</div>
+                {% endif %}
+              </div>
+              {% if p.rating %}
+              <div class="rcard-rating">
+                <div class="score-box">{{ p.rating }}</div>
+                <div class="score-label">{{ p.reviews_count }} {{ p.reviews_count|plural:"отзыв,отзыва,отзывов" }}</div>
+              </div>
+              {% endif %}
+            </div>
+
+            <div class="rcard-bottom">
+              <div>{% if p.instant_booking %}<span class="badge-instant">⚡ Мгновенное</span>{% endif %}</div>
+              <div class="rcard-price">
+                <span class="rcard-amount">{{ p.base_price|intcomma }} ₸</span>
+                <span class="rcard-per"> / сутки</span>
+              </div>
+            </div>
+          </div>
+
+        </a>
+        {% empty %}
+        <div class="empty">
+          <div class="ico">🔍</div>
+          <h3>Ничего не найдено</h3>
+          <p>Попробуйте изменить город, даты или фильтры.</p>
+          <a class="btn mt" href="{% url 'home' %}">Сбросить фильтры</a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

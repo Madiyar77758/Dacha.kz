@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load humanize ru %}
+{% block content %}
+<section class="section container">
+  <h1>Избранное</h1>
+  <div class="grid mt">
+    {% for p in properties %}
+      <a class="card" href="{% url 'property_detail' p.pk %}">
+        <div class="photo">
+          <img src="{{ p.cover }}" alt="{{ p.title }}" loading="lazy">
+          <span class="type-tag">{{ p.get_type_display }}</span>
+          <button type="button" class="fav fav-btn active" data-id="{{ p.id }}" aria-pressed="true" title="Убрать из избранного">❤️</button>
+        </div>
+        <div class="body">
+          <div class="title"><span>{{ p.title }}</span>{% if p.rating %}<span class="rating"><span class="star">★</span>{{ p.rating }}</span>{% endif %}</div>
+          <div class="meta">📍 {{ p.city }}</div>
+          <div class="price">{{ p.base_price|intcomma }} ₸ <small>/ сутки</small></div>
+        </div>
+      </a>
+    {% empty %}
+      <div class="empty" style="grid-column:1/-1">
+        <div class="ico">❤️</div>
+        <h3>В избранном пока пусто</h3>
+        <p>Нажимайте на ♡ у понравившихся объектов — они появятся здесь.</p>
+        <a class="btn mt" href="{% url 'home' %}">Смотреть объекты</a>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

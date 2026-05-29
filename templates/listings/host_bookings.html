@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block content %}
+<section class="section container">
+  <h1>Заявки на бронирование</h1>
+  <div class="table-wrap mt">
+  <table>
+    <tr><th>Объект</th><th>Гость</th><th>Даты</th><th>Вам к выплате</th><th>Статус</th><th></th></tr>
+    {% for b in bookings %}
+    <tr>
+      <td><strong>{{ b.property.title }}</strong></td>
+      <td>{{ b.guest }}<br><span class="help">{{ b.guests_count }} гост.</span></td>
+      <td>{{ b.check_in }} → {{ b.check_out }}<br><span class="help">{{ b.nights }} ноч.</span></td>
+      <td><strong>{{ b.host_payout|intcomma }} ₸</strong></td>
+      <td><span class="st st-{{ b.status }}">{{ b.get_status_display }}</span></td>
+      <td>
+        {% if b.status == "pending_host" %}
+        <form method="post" action="{% url 'booking_decision' b.pk %}" class="flex gap-sm" style="margin:0">
+          {% csrf_token %}
+          <button name="action" value="confirm" class="btn btn-sm">✓ Подтвердить</button>
+          <button name="action" value="reject" class="btn btn-sm btn-danger">✕</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}<tr><td colspan="6"><div class="empty"><div class="ico">📨</div><h3>Заявок пока нет</h3><p>Как только гость забронирует — заявка появится здесь.</p></div></td></tr>{% endfor %}
+  </table>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load humanize ru %}
+{% block title %}Детали брони — Dacha.kz{% endblock %}
+{% block content %}
+<section class="section container" style="max-width:560px">
+  <div class="panel" style="text-align:center;padding:36px">
+    <div style="font-size:56px;margin-bottom:12px">✅</div>
+    <h2 style="margin:0 0 8px">Бронь оформлена!</h2>
+    <p class="muted">{{ booking.property.title }}</p>
+
+    <div style="background:var(--bg);border-radius:14px;padding:18px 20px;margin:20px 0;text-align:left">
+      <div class="row"><span class="muted">Заезд</span><strong>{{ booking.check_in|date:"d M Y" }}</strong></div>
+      <div class="row"><span class="muted">Выезд</span><strong>{{ booking.check_out|date:"d M Y" }}</strong></div>
+      <div class="row"><span class="muted">Ночей</span><strong>{{ booking.nights }}</strong></div>
+      <div class="row"><span class="muted">Гостей</span><strong>{{ booking.guests_count }}</strong></div>
+      <div class="row total"><span>Итого</span><span>{{ booking.total_amount|intcomma }} ₸</span></div>
+    </div>
+
+    <div class="trust-badge" style="font-size:16px;margin-bottom:20px">
+      💵 Оплата наличными при заезде
+    </div>
+
+    <a class="btn btn-block" href="{% url 'my_bookings' %}">Перейти к моим броням</a>
+    <a class="btn btn-ghost btn-block" style="margin-top:10px" href="{% url 'property_detail' booking.property.pk %}">Вернуться к объекту</a>
+  </div>
+</section>
+{% endblock %}

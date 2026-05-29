@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="container auth-wrap">
+  <div class="panel">
+    <h1>Оцените отдых</h1>
+    <p class="muted">{{ booking.property.title }} · {{ booking.check_in }} — {{ booking.check_out }}</p>
+
+    <form method="post" class="stack">{% csrf_token %}
+      <label>Ваша оценка</label>
+      <div class="star-input" id="stars">
+        {% for i in "54321"|make_list %}
+        <input type="radio" name="rating" id="star{{ i }}" value="{{ i }}" {% if i == "5" %}checked{% endif %}>
+        <label for="star{{ i }}" title="{{ i }}">★</label>
+        {% endfor %}
+      </div>
+
+      <label>Комментарий</label>
+      <textarea name="comment" rows="5" placeholder="Что понравилось, что можно улучшить?"></textarea>
+
+      <button class="btn btn-block mt">Опубликовать отзыв</button>
+      <a class="btn btn-ghost btn-block mt" style="margin-top:8px" href="{% url 'my_bookings' %}">Отмена</a>
+    </form>
+  </div>
+</section>
+{% endblock %}

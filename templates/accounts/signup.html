@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="container auth-wrap">
+  <div class="panel">
+    <h1>Регистрация</h1>
+    <form method="post" class="stack">{% csrf_token %}
+      {% for field in form %}
+        <label>{{ field.label }}</label>
+        {% if field.name == "as_host" %}
+          <div class="checks"><label>{{ field }} {{ field.label }}</label></div>
+        {% else %}{{ field }}{% endif %}
+        {% if field.help_text %}<div class="help">{{ field.help_text|safe }}</div>{% endif %}
+        {% if field.errors %}<div class="msg error">{{ field.errors|striptags }}</div>{% endif %}
+      {% endfor %}
+      <button class="btn" style="width:100%;margin-top:16px">Создать аккаунт</button>
+    </form>
+    <p class="help" style="margin-top:14px">Уже есть аккаунт? <a href="{% url 'login' %}">Войти</a></p>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="container auth-wrap">
+  <div class="panel">
+    <h1>Вход</h1>
+    <form method="post" class="stack">{% csrf_token %}
+      {% for field in form %}
+        <label>{{ field.label }}</label>{{ field }}
+      {% endfor %}
+      {% if form.errors %}<div class="msg error">Неверный логин или пароль.</div>{% endif %}
+      <button class="btn" style="width:100%;margin-top:16px">Войти</button>
+    </form>
+    <p class="help" style="margin-top:14px">Нет аккаунта? <a href="{% url 'signup' %}">Зарегистрироваться</a></p>
+  </div>
+</section>
+{% endblock %}

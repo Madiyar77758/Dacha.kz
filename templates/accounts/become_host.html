@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="container auth-wrap">
+  <div class="panel">
+    <h1>Стать хостом</h1>
+    <p>Сдавайте свою дачу, коттедж или баню и зарабатывайте. После подключения вы получите доступ к кабинету хоста: добавление объектов, управление календарём и заявками.</p>
+    <form method="post">{% csrf_token %}
+      <button class="btn" style="width:100%">Подключить режим хоста</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

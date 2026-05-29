@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block content %}
+<section class="section container">
+  <div class="section-head">
+    <div>
+      <h1 style="margin:0">Кабинет хоста</h1>
+      <p class="muted" style="margin:4px 0 0">Управляйте объектами, календарём и заявками</p>
+    </div>
+    <div class="flex gap-sm">
+      <a class="btn btn-ghost" href="{% url 'host_bookings' %}">📨 Заявки на бронь</a>
+      <a class="btn" href="{% url 'property_create' %}">＋ Добавить объект</a>
+    </div>
+  </div>
+
+  <div class="grid">
+    {% for p in properties %}
+      <div class="card">
+        <a class="photo" href="{% url 'property_detail' p.pk %}">
+          <img src="{{ p.cover }}" alt="{{ p.title }}" loading="lazy">
+          <span class="type-tag">{{ p.get_type_display }}</span>
+        </a>
+        <div class="body">
+          <div class="title"><span>{{ p.title }}</span></div>
+          <div class="meta">📍 {{ p.city }} · <span class="st st-{{ p.status }}">{{ p.get_status_display }}</span></div>
+          <div class="price">{{ p.base_price|intcomma }} ₸ <small>/ сутки</small></div>
+          <div class="flex gap-sm mt">
+            <a class="btn btn-sm btn-ghost" href="{% url 'property_edit' p.pk %}">✏️ Изменить</a>
+            <a class="btn btn-sm" href="{% url 'property_calendar' p.pk %}">📅 Календарь</a>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="empty" style="grid-column:1/-1">
+        <div class="ico">🏡</div>
+        <h3>У вас пока нет объектов</h3>
+        <p>Добавьте первый объект и начните принимать брони.</p>
+        <a class="btn mt" href="{% url 'property_create' %}">＋ Добавить объект</a>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

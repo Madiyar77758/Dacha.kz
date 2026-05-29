@@ -1,0 +1,372 @@
+{% extends "base.html" %}
+{% load humanize ru %}
+{% block title %}{{ property.title }} — Dacha.kz{% endblock %}
+{% block content %}
+
+<!-- Хлебные крошки -->
+<div class="container" style="padding-top:16px">
+  <nav class="breadcrumbs">
+    <a href="{% url 'home' %}">Главная</a>
+    <span>›</span>
+    <a href="{% url 'home' %}?city={{ property.city }}">{{ property.city }}</a>
+    <span>›</span>
+    <a href="{% url 'home' %}?type={{ property.type }}">{{ property.get_type_display }}</a>
+    <span>›</span>
+    <span class="cur">{{ property.title|truncatechars:40 }}</span>
+  </nav>
+</div>
+
+<section class="section container" style="padding-top:12px">
+  <!-- Заголовок -->
+  <div class="detail-header">
+    <div>
+      <h1 style="margin:0 0 6px">{{ property.title }}</h1>
+      <div class="detail-sub">
+        {% if property.reviews_count %}
+          <a href="#reviews" class="rating"><span class="star">★</span> {{ property.rating }}
+            <span class="muted" style="font-weight:500"> · {{ property.reviews_count }} {{ property.reviews_count|plural:"отзыв,отзыва,отзывов" }}</span>
+          </a><span class="dot"></span>
+        {% endif %}
+        <span>📍 {{ property.city }}{% if property.address %}, {{ property.address }}{% endif %}</span>
+        {% if property.instant_booking %}<span class="dot"></span><span class="badge-instant">⚡ Мгновенное бронирование</span>{% endif %}
+      </div>
+      <!-- Топ-удобства прямо под заголовком, как на Booking.com -->
+      {% if property.amenities.all %}
+      <div class="top-amen">
+        {% for a in property.amenities.all|slice:":6" %}<span class="top-amen-pill">{{ a.icon }} {{ a.name }}</span>{% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    <div class="flex gap-sm">
+      <button type="button" class="btn btn-ghost fav-btn-text {% if is_favorite %}active{% endif %}" data-id="{{ property.id }}">
+        <span class="fav-ico">{% if is_favorite %}❤️{% else %}🤍{% endif %}</span> <span class="fav-label">{% if is_favorite %}В избранном{% else %}В избранное{% endif %}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Галерея -->
+  <div class="gallery">
+    {% for src in property.gallery|slice:":5" %}
+      <a href="{{ src }}" target="_blank"><img src="{{ src }}" alt="{{ property.title }}" loading="lazy"></a>
+    {% empty %}
+      <div class="ph" style="grid-column:1/-1;grid-row:1/3;height:400px;display:flex;align-items:center;justify-content:center;font-size:80px">🏡</div>
+    {% endfor %}
+  </div>
+
+  <div class="split">
+    <!-- Левая колонка -->
+    <div>
+
+      <!-- О жилье -->
+      <div class="panel">
+        <div class="host-mini">
+          <div class="avatar" style="width:48px;height:48px;font-size:20px">{{ property.host.first_name|first|default:property.host.username|first|upper }}</div>
+          <div style="flex:1">
+            <div style="font-weight:700">{{ property.host.get_full_name|default:property.host.username }}</div>
+            <div class="help">Хозяин · {% if property.host.verification == 'verified' %}✅ Верифицирован{% else %}Зарегистрирован{% endif %}</div>
+          </div>
+          {% if property.host.phone %}
+          <a class="btn-wa" href="https://wa.me/{{ property.host.phone|wa_number }}?text=Здравствуйте!%20Интересует%20аренда%20«{{ property.title|urlencode }}»" target="_blank" rel="noopener">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            WhatsApp
+          </a>
+          {% endif %}
+        </div>
+        <p style="margin:14px 0 12px;color:var(--text)">{{ property.description|linebreaksbr|default:"Описание скоро появится." }}</p>
+        <div class="stats-row">
+          <div class="stat"><span class="stat-n">{{ property.rooms }}</span><span class="help">комнат</span></div>
+          <div class="stat"><span class="stat-n">{{ property.beds }}</span><span class="help">спальных мест</span></div>
+          <div class="stat"><span class="stat-n">{{ property.max_guests }}</span><span class="help">гостей макс.</span></div>
+          {% if property.area_sqm %}<div class="stat"><span class="stat-n">{{ property.area_sqm }}</span><span class="help">м²</span></div>{% endif %}
+        </div>
+      </div>
+
+      <!-- Удобства -->
+      {% if property.amenities.all %}
+      <div class="panel">
+        <h3>Что включено</h3>
+        <div class="amen-grid">
+          {% for a in property.amenities.all %}
+            <div class="item"><span class="ico">{{ a.icon }}</span> {{ a.name }}</div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Правила проживания -->
+      <div class="panel">
+        <h3>Правила проживания</h3>
+        <div class="rules-grid">
+          <div class="rule"><span class="rule-ico">🕐</span><div><div style="font-weight:700">Заезд</div><div class="help">c 14:00</div></div></div>
+          <div class="rule"><span class="rule-ico">🕛</span><div><div style="font-weight:700">Выезд</div><div class="help">до 12:00</div></div></div>
+          <div class="rule"><span class="rule-ico">🚭</span><div><div style="font-weight:700">Курение</div><div class="help">Запрещено</div></div></div>
+          <div class="rule"><span class="rule-ico">🐾</span><div><div style="font-weight:700">Питомцы</div><div class="help">Уточните у хоста</div></div></div>
+          <div class="rule"><span class="rule-ico">🎉</span><div><div style="font-weight:700">Вечеринки</div><div class="help">Уточните у хоста</div></div></div>
+          <div class="rule"><span class="rule-ico">🌙</span><div><div style="font-weight:700">Мин. ночей</div><div class="help">{{ property.min_nights }} {{ property.min_nights|plural:"ночь,ночи,ночей" }}</div></div></div>
+        </div>
+        <div class="panel" style="background:#fff8e6;border-color:#f4d06f;margin-top:16px;padding:14px 18px">
+          <strong>Политика отмены:</strong>
+          {% if property.cancellation_policy == "strict" %}
+            Строгая — возврат 50% при отмене за 7+ дней.
+          {% elif property.cancellation_policy == "moderate" %}
+            Умеренная — полный возврат за 5+ дней до заезда.
+          {% else %}
+            Гибкая — полный возврат при отмене за 24 ч до заезда.
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Отзывы -->
+      <div class="panel" id="reviews">
+        {% if property.reviews_count %}
+        <div class="flex" style="align-items:center;gap:16px;margin-bottom:20px">
+          <div class="score-big">{{ property.rating }}</div>
+          <div>
+            <div style="font-weight:800;font-size:18px">
+              {% if property.rating >= 4.8 %}Великолепно{% elif property.rating >= 4.5 %}Отлично{% elif property.rating >= 4.0 %}Очень хорошо{% else %}Хорошо{% endif %}
+            </div>
+            <div class="help">{{ property.reviews_count }} {{ property.reviews_count|plural:"отзыв,отзыва,отзывов" }}</div>
+          </div>
+        </div>
+        {% else %}
+        <h3>Отзывы</h3>
+        {% endif %}
+        {% for r in reviews %}
+          <div class="review">
+            <div class="ava">{{ r.author.first_name|first|default:r.author.username|first|upper }}</div>
+            <div>
+              <div class="who">{{ r.author.first_name|default:r.author.username }}</div>
+              <div><span class="stars">{% for _ in "x"|rjust:r.rating %}★{% endfor %}</span><span class="when"> · {{ r.created_at|date:"d.m.Y" }}</span></div>
+              {% if r.comment %}<p style="margin:6px 0 0">{{ r.comment }}</p>{% endif %}
+            </div>
+          </div>
+        {% empty %}
+          <p class="muted">Пока нет отзывов. Станьте первым после поездки.</p>
+        {% endfor %}
+      </div>
+
+      <!-- Карта -->
+      {% if property.latitude and property.longitude %}
+      <div class="panel">
+        <h3>Расположение</h3>
+        <p class="help" style="margin-bottom:12px">📍 {{ property.city }}{% if property.address %}, {{ property.address }}{% endif %}</p>
+        <iframe class="map-frame" loading="lazy"
+          src="https://www.openstreetmap.org/export/embed.html?bbox={{ map_bbox|urlencode }}&layer=mapnik&marker={{ property.latitude }}%2C{{ property.longitude }}">
+        </iframe>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- Правая колонка — виджет бронирования -->
+    <aside>
+      <div class="panel book-box" id="bookBox">
+        <div class="flex" style="justify-content:space-between;align-items:flex-end">
+          <div class="book-price">{{ property.base_price|intcomma }} ₸ <small>/ сутки</small></div>
+          {% if property.rating %}<span class="rating"><span class="star">★</span> {{ property.rating }}</span>{% endif %}
+        </div>
+        <div class="trust-badge">💵 Оплата наличными при заезде &nbsp;·&nbsp; Бесплатная отмена</div>
+
+        {% if user.is_authenticated %}
+        <form method="post" action="{% url 'booking_create' property.pk %}" class="stack" id="bkForm">
+          {% csrf_token %}
+          <input type="hidden" name="check_in" id="ci">
+          <input type="hidden" name="check_out" id="co">
+          <input type="hidden" name="guests" id="guests" value="1">
+
+          <!-- Дата-поля -->
+          <div class="bk-grid" id="dateFields">
+            <div class="cell bk-cell" id="ciCell">
+              <label>Заезд</label>
+              <div class="bk-val" id="ciLabel">Выберите</div>
+            </div>
+            <div class="cell bk-cell" id="coCell">
+              <label>Выезд</label>
+              <div class="bk-val" id="coLabel">Выберите</div>
+            </div>
+          </div>
+
+          <!-- Интерактивный календарь-диапазон -->
+          <div class="rangecal" id="rangecal">
+            <div class="rangecal-head">
+              <button type="button" class="cal-nav" id="prevM" aria-label="Назад">‹</button>
+              <span id="calTitle"></span>
+              <button type="button" class="cal-nav" id="nextM" aria-label="Вперёд">›</button>
+            </div>
+            <div id="calGrid"></div>
+          </div>
+          <div id="dateHint" class="help" style="min-height:18px;margin:4px 0"></div>
+
+          <!-- Степпер гостей -->
+          <div class="bk-full" style="display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700">Гостей</div>
+              <div class="help" style="font-size:12px">максимум {{ property.max_guests }}</div>
+            </div>
+            <div class="stepper">
+              <button type="button" class="step-btn" id="gMinus">−</button>
+              <span id="gVal">1</span>
+              <button type="button" class="step-btn" id="gPlus">+</button>
+            </div>
+          </div>
+
+          <!-- Расчёт цены -->
+          <div id="priceBox" style="display:none;margin-top:6px">
+            <div class="row muted-row"><span id="nightsLabel"></span><span id="baseAmt"></span></div>
+            {% if property.cleaning_fee %}<div class="row muted-row"><span>Уборка</span><span>{{ property.cleaning_fee|intcomma }} ₸</span></div>{% endif %}
+            <div class="row muted-row"><span>Сервисный сбор ({{ service_fee_percent }}%)</span><span id="svcAmt"></span></div>
+            <div class="row total"><span>Итого</span><span id="totalAmt"></span></div>
+          </div>
+          <p id="pricePrompt" class="help center" style="margin:8px 0">Выберите даты, чтобы увидеть стоимость</p>
+
+          <button class="btn btn-accent btn-block" id="bkSubmit" disabled style="margin-top:10px">
+            {% if property.instant_booking %}⚡ Забронировать сразу{% else %}📨 Отправить заявку{% endif %}
+          </button>
+          <p class="help center" style="margin-top:8px">
+            {% if property.instant_booking %}⚡ Мгновенное подтверждение{% else %}Хост ответит в течение 24 часов{% endif %}
+          </p>
+          <p class="help center">💵 Платите наличными при заезде</p>
+        </form>
+        {% else %}
+          <p class="mt">Войдите, чтобы забронировать этот объект.</p>
+          <a class="btn btn-block" href="{% url 'login' %}?next={{ request.path }}">Войти и забронировать</a>
+        {% endif %}
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- Залипающая мобильная кнопка -->
+{% if user.is_authenticated %}
+<div class="sticky-book" id="stickyBook">
+  <div>
+    <strong>{{ property.base_price|intcomma }} ₸</strong> <span class="help">/ сутки</span>
+  </div>
+  <button class="btn btn-accent" onclick="document.getElementById('bookBox').scrollIntoView({behavior:'smooth'})">
+    {% if property.instant_booking %}⚡ Забронировать{% else %}📨 Заявка{% endif %}
+  </button>
+</div>
+{% endif %}
+
+{{ busy_dates|json_script:"busyData" }}
+<script>
+const CFG = {
+  base: {{ property.base_price }},
+  weekend: {{ property.weekend_price|default:property.base_price }},
+  cleaning: {{ property.cleaning_fee }},
+  svcPct: {{ service_fee_percent }},
+  minNights: {{ property.min_nights }},
+  maxGuests: {{ property.max_guests }},
+};
+const BUSY = new Set(JSON.parse(document.getElementById('busyData').textContent));
+const MONTHS=["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
+const WD=["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const fmtDate=s=>{if(!s)return'';const[y,m,d]=s.split('-');return`${d}.${m}.${y}`;};
+const nfmt=n=>n.toLocaleString('ru-RU');
+
+function plural(n,a,b,c){n=Math.abs(n)%100;const n1=n%10;if(n>10&&n<20)return c;if(n1>1&&n1<5)return b;if(n1===1)return a;return c;}
+
+const today=new Date();today.setHours(0,0,0,0);
+let view=new Date(today.getFullYear(),today.getMonth(),1);
+let ci=null,co=null,guests=1;
+
+const el=id=>document.getElementById(id);
+
+if(el('rangecal')){
+  function nightsBetween(a,b){return Math.round((new Date(b)-new Date(a))/86400000);}
+  function rangeHasBusy(a,b){let d=new Date(a);while(iso(d)<b){if(BUSY.has(iso(d)))return true;d.setDate(d.getDate()+1);}return false;}
+  function priceForNight(k){const dt=new Date(k);const wd=dt.getDay();return(wd===5||wd===6)?CFG.weekend:CFG.base;}
+
+  function renderCal(){
+    const y=view.getFullYear(),m=view.getMonth();
+    el('calTitle').textContent=`${MONTHS[m]} ${y}`;
+    el('prevM').disabled=(y===today.getFullYear()&&m===today.getMonth());
+    let off=(new Date(y,m,1).getDay()+6)%7,days=new Date(y,m+1,0).getDate();
+    let h='<div class="cal">';
+    WD.forEach(w=>h+=`<div class="day pad wd">${w}</div>`);
+    for(let i=0;i<off;i++)h+='<div class="day pad"></div>';
+    for(let d=1;d<=days;d++){
+      const cur=new Date(y,m,d),k=iso(cur);
+      let cls='day clickable';
+      const isPast=cur<today,isBusy=BUSY.has(k);
+      if(isPast||isBusy){cls='day off';}
+      else{
+        if(k===ci)cls+=' sel-start';
+        else if(k===co)cls+=' sel-end';
+        else if(ci&&co&&k>ci&&k<co)cls+=' in-range';
+        else if(ci&&!co&&k>ci)cls+=' hoverable';
+      }
+      h+=`<div class="${cls}"${(!isPast&&!isBusy)?` data-d="${k}"`:''}>${d}</div>`;
+    }
+    el('calGrid').innerHTML=h+'</div>';
+  }
+
+  function updateWidget(){
+    el('ciLabel').textContent=ci?fmtDate(ci):'Выберите';
+    el('coLabel').textContent=co?fmtDate(co):'Выберите';
+    el('ci').value=ci||'';
+    el('co').value=co||'';
+    el('ciCell').classList.toggle('active',!!ci);
+    el('coCell').classList.toggle('active',!!co);
+
+    if(ci&&co){
+      const n=nightsBetween(ci,co);
+      let base=0,d=new Date(ci);
+      for(let i=0;i<n;i++){base+=priceForNight(iso(d));d.setDate(d.getDate()+1);}
+      const svc=Math.round(base*CFG.svcPct/100);
+      const total=base+CFG.cleaning+svc;
+      el('nightsLabel').textContent=`Проживание · ${n} ${plural(n,'ночь','ночи','ночей')}`;
+      el('baseAmt').textContent=nfmt(base)+' ₸';
+      el('svcAmt').textContent=nfmt(svc)+' ₸';
+      el('totalAmt').textContent=nfmt(total)+' ₸';
+      el('priceBox').style.display='block';
+      el('pricePrompt').style.display='none';
+      if(n<CFG.minNights){
+        el('dateHint').textContent=`Минимум ${CFG.minNights} ${plural(CFG.minNights,'ночь','ночи','ночей')}`;
+        el('dateHint').style.color='#c62828';
+        el('bkSubmit').disabled=true;
+      }else{
+        el('dateHint').textContent='✓ Даты свободны';
+        el('dateHint').style.color='var(--green)';
+        el('bkSubmit').disabled=false;
+      }
+    }else{
+      el('priceBox').style.display='none';
+      el('pricePrompt').style.display='block';
+      el('bkSubmit').disabled=true;
+      el('dateHint').textContent=ci?'Теперь выберите дату выезда':'';
+      el('dateHint').style.color='var(--muted)';
+    }
+  }
+
+  el('calGrid').addEventListener('click',e=>{
+    const cell=e.target.closest('[data-d]');if(!cell)return;
+    const k=cell.dataset.d;
+    if(!ci||(ci&&co)||k<=ci){ci=k;co=null;}
+    else{if(rangeHasBusy(ci,k)){ci=k;co=null;}else{co=k;}}
+    renderCal();updateWidget();
+  });
+  el('prevM').addEventListener('click',()=>{view.setMonth(view.getMonth()-1);renderCal();});
+  el('nextM').addEventListener('click',()=>{view.setMonth(view.getMonth()+1);renderCal();});
+
+  function setG(v){guests=Math.min(CFG.maxGuests,Math.max(1,v));el('gVal').textContent=guests;el('guests').value=guests;el('gMinus').disabled=guests<=1;el('gPlus').disabled=guests>=CFG.maxGuests;}
+  el('gMinus').addEventListener('click',()=>setG(guests-1));
+  el('gPlus').addEventListener('click',()=>setG(guests+1));
+
+  // предзаполнение из URL (переход с поиска)
+  const q=new URLSearchParams(location.search);
+  if(q.get('check_in')&&q.get('check_out')){ci=q.get('check_in');co=q.get('check_out');const d=new Date(ci);view=new Date(d.getFullYear(),d.getMonth(),1);}
+  setG(parseInt(q.get('guests'))||1);
+  renderCal();updateWidget();
+}
+
+// Залипающая кнопка: появляется когда виджет уходит из viewport
+const sticky=el('stickyBook');
+if(sticky){
+  const obs=new IntersectionObserver(([e])=>sticky.classList.toggle('visible',!e.isIntersecting),{threshold:0.1});
+  obs.observe(el('bookBox'));
+}
+</script>
+{% endblock %}
