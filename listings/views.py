@@ -1,8 +1,10 @@
+from collections import defaultdict
 from datetime import date
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db.models import Count, Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
@@ -200,19 +202,108 @@ def property_edit(request, pk):
 
 @login_required
 def property_calendar(request, pk):
-    """Управление календарём: добавление блокировок."""
+    """Управление календарём: добавление и удаление блокировок."""
     prop = get_object_or_404(Property, pk=pk, host=request.user)
     if request.method == "POST":
+        # Удаление блокировки
+        del_pk = request.POST.get("delete_block")
+        if del_pk:
+            prop.blocks.filter(pk=del_pk).delete()
+            return redirect("property_calendar", pk=pk)
+        # Создание блокировки
         form = BlockForm(request.POST)
         if form.is_valid():
             block = form.save(commit=False)
             block.property = prop
             block.save()
-            messages.success(request, "Даты заблокированы.")
             return redirect("property_calendar", pk=pk)
     else:
         form = BlockForm()
     busy = sorted(d.isoformat() for d in booked_dates(prop))
+    bookings_data = [
+        {"start": b.check_in.isoformat(), "end": b.check_out.isoformat(),
+         "guest": str(b.guest), "nights": b.nights, "status": b.status}
+        for b in Booking.objects.filter(
+            property=prop, status__in=Booking.BLOCKING_STATUSES
+        ).select_related("guest")
+    ]
     return render(request, "listings/calendar.html", {
-        "property": prop, "form": form, "blocks": prop.blocks.all(), "busy_dates": busy,
+        "property": prop, "blocks": prop.blocks.all(),
+        "busy_dates": busy, "bookings_data": bookings_data,
+        "today": date.today().isoformat(),
     })
+
+
+@login_required
+def host_analytics(request):
+    if not request.user.is_host:
+        return redirect("become_host")
+
+    ACTIVE = (Booking.Status.CONFIRMED, Booking.Status.COMPLETED, Booking.Status.PENDING_HOST)
+    bookings = Booking.objects.filter(
+        property__host=request.user, status__in=ACTIVE
+    ).select_related("property")
+
+    # --- Сводка ---
+    total_bookings = bookings.count()
+    total_earned = sum(b.host_payout for b in bookings)
+    total_nights = sum(b.nights for b in bookings)
+    avg_check = round(total_earned / total_bookings) if total_bookings else 0
+
+    # --- По объектам ---
+    by_prop = defaultdict(lambda: {"bookings": 0, "earned": 0, "name": ""})
+    for b in bookings:
+        key = b.property_id
+        by_prop[key]["name"] = b.property.title
+        by_prop[key]["bookings"] += 1
+        by_prop[key]["earned"] += b.host_payout
+    by_prop = sorted(by_prop.values(), key=lambda x: x["earned"], reverse=True)
+
+    # --- По месяцам (последние 6 месяцев) ---
+    monthly = defaultdict(lambda: {"earned": 0, "bookings": 0})
+    for b in bookings:
+        key = b.check_in.strftime("%Y-%m")
+        monthly[key]["earned"] += b.host_payout
+        monthly[key]["bookings"] += 1
+    months_sorted = sorted(monthly.items())[-6:]
+
+    # --- Предстоящие ---
+    upcoming = Booking.objects.filter(
+        property__host=request.user,
+        status__in=ACTIVE,
+        check_in__gte=date.today(),
+    ).select_related("property", "guest").order_by("check_in")[:5]
+
+    context = {
+        "total_bookings": total_bookings,
+        "total_earned": total_earned,
+        "total_nights": total_nights,
+        "avg_check": avg_check,
+        "by_prop": by_prop,
+        "monthly_labels": [m[0] for m in months_sorted],
+        "monthly_earned": [m[1]["earned"] for m in months_sorted],
+        "monthly_bookings": [m[1]["bookings"] for m in months_sorted],
+        "upcoming": upcoming,
+    }
+    return render(request, "listings/analytics.html", context)
+
+
+def properties_geojson(request):
+    """GeoJSON для карты — все опубликованные объекты с координатами."""
+    props = Property.objects.filter(
+        status=Property.Status.PUBLISHED,
+        latitude__isnull=False, longitude__isnull=False,
+    ).prefetch_related("photos")
+    features = []
+    for p in props:
+        features.append({
+            "type": "Feature",
+            "geometry": {"type": "Point", "coordinates": [float(p.longitude), float(p.latitude)]},
+            "properties": {
+                "id": p.pk, "title": p.title, "city": p.city,
+                "price": p.base_price, "rating": float(p.rating),
+                "type": p.get_type_display(), "cover": p.cover,
+                "url": p.get_absolute_url(),
+            },
+        })
+    return JsonResponse({"type": "FeatureCollection", "features": features})

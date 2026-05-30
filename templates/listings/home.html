@@ -84,19 +84,29 @@
     <!-- ===== ВЫДАЧА ===== -->
     <div class="results-main">
 
-      <!-- Сортировка -->
+      <!-- Сортировка + переключатель вид -->
       <div class="sort-row">
         <span class="help">{{ properties|length }} {{ properties|length|plural:"объект,объекта,объектов" }}</span>
-        <div class="sort-tabs">
-          {% for val,label in sort_options %}
-            <a class="sort-tab {% if sort == val %}active{% endif %}"
-               href="?{% for k,v in filters.items %}{% if k != 'sort' %}{{ k }}={{ v }}&{% endif %}{% endfor %}sort={{ val }}">{{ label }}</a>
-          {% endfor %}
+        <div class="flex gap-sm" style="flex-wrap:wrap">
+          <div class="sort-tabs">
+            {% for val,label in sort_options %}
+              <a class="sort-tab {% if sort == val %}active{% endif %}"
+                 href="?{% for k,v in filters.items %}{% if k != 'sort' %}{{ k }}={{ v }}&{% endif %}{% endfor %}sort={{ val }}">{{ label }}</a>
+            {% endfor %}
+          </div>
+          <div class="view-tabs">
+            <button class="view-tab active" id="btnList" onclick="setView('list')">☰ Список</button>
+            <button class="view-tab" id="btnMap" onclick="setView('map')">🗺 Карта</button>
+          </div>
         </div>
+      </div>
+      <!-- Карта (Leaflet) -->
+      <div id="mapView" style="display:none;border-radius:var(--radius);overflow:hidden;height:520px;border:1px solid var(--line);margin-bottom:16px">
+        <div id="map" style="width:100%;height:100%"></div>
       </div>
 
       <!-- Карточки -->
-      <div class="results-grid">
+      <div class="results-grid" id="results-list">
         {% for p in properties %}
         <a class="rcard" href="{% url 'property_detail' p.pk %}?check_in={{ filters.check_in }}&check_out={{ filters.check_out }}&guests={{ filters.guests }}">
 
@@ -152,4 +162,61 @@
 
   </div>
 </section>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+let mapInit = false, leafMap = null;
+const listEl = document.getElementById('results-list');
+const mapView = document.getElementById('mapView');
+
+function setView(v){
+  document.getElementById('btnList').classList.toggle('active', v==='list');
+  document.getElementById('btnMap').classList.toggle('active', v==='map');
+  if(v==='map'){
+    mapView.style.display='block';
+    listEl && (listEl.style.display='none');
+    if(!mapInit){ mapInit=true; initMap(); }
+    else leafMap && leafMap.invalidateSize();
+  } else {
+    mapView.style.display='none';
+    listEl && (listEl.style.display='flex');
+  }
+}
+
+function initMap(){
+  leafMap = L.map('map', {zoomControl:true}).setView([43.5, 77.0], 8);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© OpenStreetMap',maxZoom:18
+  }).addTo(leafMap);
+
+  fetch('/api/properties.json')
+    .then(r=>r.json())
+    .then(data=>{
+      const bounds=[];
+      data.features.forEach(f=>{
+        const [lng,lat]=f.geometry.coordinates;
+        const p=f.properties;
+        const icon=L.divIcon({
+          className:'',
+          html:`<div class="map-marker">${(p.price/1000).toFixed(0)}к ₸</div>`,
+          iconSize:null, iconAnchor:[40,18]
+        });
+        const m=L.marker([lat,lng],{icon}).addTo(leafMap);
+        m.bindPopup(`
+          <a href="${p.url}" class="map-popup" target="_blank">
+            ${p.cover?`<img src="${p.cover}" style="width:100%;height:120px;object-fit:cover;display:block;border-radius:8px 8px 0 0">`:''}
+            <div style="padding:10px">
+              <div style="font-weight:700;font-size:14px">${p.title}</div>
+              <div style="color:#6f7b73;font-size:12px;margin:2px 0">📍 ${p.city} · ${p.type}</div>
+              ${p.rating?`<div style="color:#f4a623;font-size:12px">★ ${p.rating}</div>`:''}
+              <div style="font-weight:800;margin-top:6px">${p.price.toLocaleString('ru-RU')} ₸ <span style="font-weight:400;color:#6f7b73">/ сутки</span></div>
+            </div>
+          </a>
+        `,{maxWidth:220, className:'leafpop'});
+        bounds.push([lat,lng]);
+      });
+      if(bounds.length) leafMap.fitBounds(bounds, {padding:[40,40], maxZoom:12});
+    });
+}
+</script>
 {% endblock %}
