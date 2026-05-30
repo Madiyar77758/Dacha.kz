@@ -1,0 +1,30 @@
+# Render Blueprint — создаёт веб-сервис + PostgreSQL автоматически.
+# Деплой: render.com → New → Blueprint → выбрать этот репозиторий.
+services:
+  - type: web
+    name: dacha-kz
+    runtime: python
+    plan: free
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn config.wsgi:application"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true          # Render сгенерирует случайный ключ
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://dacha-kz.onrender.com"
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: DATABASE_URL            # подключается к БД ниже автоматически
+        fromDatabase:
+          name: dacha-db
+          property: connectionString
+
+databases:
+  - name: dacha-db
+    plan: free
+    databaseName: dachakaz
+    user: dachakaz
