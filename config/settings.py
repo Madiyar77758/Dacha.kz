@@ -26,12 +26,14 @@ SECRET_KEY = os.environ.get(
     "django-insecure-dev-key-change-me-in-production-0123456789",
 )
 DEBUG = os.environ.get("DEBUG", "True") == "True"
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "*").split(",")
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get("ALLOWED_HOSTS", "*").split(",") if h.strip()]
 
-# Railway автоматически задаёт RAILWAY_STATIC_URL — используем его как домен
-RAILWAY_STATIC_URL = os.environ.get("RAILWAY_STATIC_URL", "")
-if RAILWAY_STATIC_URL and RAILWAY_STATIC_URL not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append(RAILWAY_STATIC_URL)
+# CSRF_TRUSTED_ORIGINS нужен Django 4+ для POST-форм по HTTPS на проде.
+# Задаётся переменной окружения через запятую, например:
+#   CSRF_TRUSTED_ORIGINS=https://madi.pythonanywhere.com
+CSRF_TRUSTED_ORIGINS = [
+    o.strip() for o in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()
+]
 
 # ---------- Приложения ----------
 INSTALLED_APPS = [
@@ -80,8 +82,22 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 # ---------- База данных ----------
-# Приоритет: DATABASE_URL (Railway) → POSTGRES_DB (.env) → SQLite (локально)
-if os.environ.get("DATABASE_URL"):
+# Приоритет: MYSQL_DB (PythonAnywhere) → DATABASE_URL (Railway) →
+#            POSTGRES_DB (.env) → SQLite (локально)
+if os.environ.get("MYSQL_DB"):
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": os.environ["MYSQL_DB"],
+            "USER": os.environ.get("MYSQL_USER", ""),
+            "PASSWORD": os.environ.get("MYSQL_PASSWORD", ""),
+            "HOST": os.environ.get("MYSQL_HOST", "localhost"),
+            "PORT": os.environ.get("MYSQL_PORT", "3306"),
+            "OPTIONS": {"charset": "utf8mb4"},
+            "CONN_MAX_AGE": 60,
+        }
+    }
+elif os.environ.get("DATABASE_URL"):
     DATABASES = {
         "default": dj_database_url.config(
             default=os.environ["DATABASE_URL"],

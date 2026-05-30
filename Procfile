@@ -1,2 +1,0 @@
-web: gunicorn config.wsgi --workers 2 --threads 2 --timeout 120
-release: python manage.py migrate --no-input
