@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% load humanize ru %}
-{% block title %}{{ property.title }} — Dacha.kz{% endblock %}
+{% block title %}{{ property.title }} · {{ property.city }} — Dacha.kz{% endblock %}
+{% block meta_description %}{{ property.title }} в {{ property.city }}. {{ property.beds }} спальных мест, до {{ property.max_guests }} гостей, {{ property.base_price|intcomma }} ₸/сутки. {{ property.description|striptags|truncatechars:120 }}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_title %}{{ property.title }} — {{ property.base_price|intcomma }} ₸/сутки{% endblock %}
+{% block og_description %}📍 {{ property.city }} · 🛏 {{ property.beds }} мест · 👥 до {{ property.max_guests }} гостей{% endblock %}
+{% block og_image %}{{ property.cover }}{% endblock %}
 {% block content %}
 
 <!-- Хлебные крошки -->

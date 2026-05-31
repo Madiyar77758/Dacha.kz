@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Мой профиль — Dacha.kz{% endblock %}
+{% block content %}
+<section class="section container" style="max-width:680px">
+  <h1>Мой профиль</h1>
+
+  <!-- Данные профиля -->
+  <div class="panel mt">
+    <div class="flex" style="gap:16px;margin-bottom:18px">
+      <div class="avatar" style="width:60px;height:60px;font-size:26px">
+        {{ user.first_name|first|default:user.username|first|upper }}
+      </div>
+      <div>
+        <div style="font-weight:800;font-size:18px">{{ user.get_full_name|default:user.username }}</div>
+        <div class="help">
+          {% if user.is_host %}🏡 Хост{% else %}🧳 Гость{% endif %}
+          {% if user.verification == 'verified' %} · ✅ Верифицирован{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <form method="post" class="stack">{% csrf_token %}
+      {% for field in profile_form %}
+        <label>{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<div class="msg error">{{ field.errors|striptags }}</div>{% endif %}
+      {% endfor %}
+      <button class="btn mt" name="save_profile" value="1">Сохранить изменения</button>
+    </form>
+  </div>
+
+  <!-- Смена пароля -->
+  <div class="panel mt">
+    <h3 style="margin-top:0">🔒 Смена пароля</h3>
+    <form method="post" class="stack">{% csrf_token %}
+      {% for field in password_form %}
+        <label>{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<div class="help">{{ field.help_text|safe }}</div>{% endif %}
+        {% if field.errors %}<div class="msg error">{{ field.errors|striptags }}</div>{% endif %}
+      {% endfor %}
+      <button class="btn btn-ghost mt" name="change_password" value="1">Изменить пароль</button>
+    </form>
+  </div>
+
+  {% if not user.is_host %}
+  <div class="panel mt" style="text-align:center">
+    <p style="margin:0 0 12px">Хотите сдавать своё жильё?</p>
+    <a class="btn" href="{% url 'become_host' %}">✨ Стать хостом</a>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

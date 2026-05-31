@@ -25,3 +25,19 @@ class SignUpForm(UserCreationForm):
         if commit:
             user.save()
         return user
+
+
+class ProfileForm(forms.ModelForm):
+    """Редактирование профиля: имя, фамилия, телефон, email."""
+    class Meta:
+        model = User
+        fields = ("first_name", "last_name", "phone", "email")
+        labels = {
+            "first_name": "Имя",
+            "last_name": "Фамилия",
+            "phone": "Телефон (для WhatsApp с хостом)",
+            "email": "Эл. почта",
+        }
+        widgets = {
+            "phone": forms.TextInput(attrs={"placeholder": "+7 (777) 000-00-00"}),
+        }

@@ -5,7 +5,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Dacha.kz — аренда дач, коттеджей и зон отдыха{% endblock %}</title>
-  <meta name="description" content="Аренда загородных дач, коттеджей, бань и глэмпинга в Казахстане. Найдите и забронируйте онлайн.">
+  <meta name="description" content="{% block meta_description %}Аренда загородных дач, коттеджей, бань и глэмпинга в Казахстане. Найдите и забронируйте онлайн за пару минут.{% endblock %}">
+  <link rel="canonical" href="{{ request.build_absolute_uri }}">
+
+  {# Open Graph — красивые превью при шаринге в WhatsApp/Telegram/соцсетях #}
+  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+  <meta property="og:site_name" content="Dacha.kz">
+  <meta property="og:title" content="{% block og_title %}Dacha.kz — загородный отдых в Казахстане{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}Дачи, коттеджи, бани и глэмпинг. Найдите и забронируйте за пару минут.{% endblock %}">
+  <meta property="og:image" content="{% block og_image %}https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=70{% endblock %}">
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+  <meta name="twitter:card" content="summary_large_image">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -30,10 +41,10 @@
     </nav>
     <div class="nav-right">
       {% if user.is_authenticated %}
-        <span class="nav-user" title="{{ user }}">
+        <a class="nav-user" href="{% url 'profile' %}" title="Мой профиль" style="text-decoration:none">
           <span class="avatar">{{ user.first_name|first|default:user.username|first|upper }}</span>
           <span class="hide-sm">{{ user.first_name|default:user.username }}</span>
-        </span>
+        </a>
         <form action="{% url 'logout' %}" method="post" style="margin:0">{% csrf_token %}
           <button class="btn btn-ghost btn-sm">Выйти</button>
         </form>

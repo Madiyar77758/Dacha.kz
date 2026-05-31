@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     "whitenoise.runserver_nostatic",   # whitenoise в dev тоже
     "django.contrib.staticfiles",
     "django.contrib.humanize",
+    "django.contrib.sites",
+    "django.contrib.sitemaps",
     "accounts",
     "listings",
     "bookings",
@@ -154,6 +156,10 @@ LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
 
 SERVICE_FEE_PERCENT = 10
+
+SITE_ID = 1
+# Базовый домен сайта (для sitemap, абсолютных ссылок). На проде задайте через env.
+SITE_DOMAIN = os.environ.get("SITE_DOMAIN", "dacha-kz.onrender.com")
 
 # ---------- Продакшен-настройки (когда DEBUG=False) ----------
 if not DEBUG:
