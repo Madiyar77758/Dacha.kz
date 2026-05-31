@@ -8,6 +8,7 @@ class StaticSitemap(Sitemap):
     """Статичные страницы."""
     priority = 0.8
     changefreq = "weekly"
+    protocol = "https"
 
     def items(self):
         return ["home"]
@@ -20,6 +21,7 @@ class PropertySitemap(Sitemap):
     """Все опубликованные объекты."""
     priority = 0.9
     changefreq = "daily"
+    protocol = "https"
 
     def items(self):
         return Property.objects.filter(status=Property.Status.PUBLISHED)
