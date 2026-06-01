@@ -25,33 +25,43 @@
 </head>
 <body>
 <header class="nav">
+  <input type="checkbox" id="navToggle" class="nav-toggle-cb" hidden>
   <div class="container nav-inner">
     <a class="logo" href="{% url 'home' %}" title="На главную"><span class="mark">🏡</span>Dacha<span>.kz</span></a>
-    <nav class="nav-menu">
-      <a class="nav-link" href="{% url 'home' %}">🔍 <span class="hide-sm">Поиск</span></a>
-      {% if user.is_authenticated %}
-        <a class="nav-link" href="{% url 'favorites' %}">❤️ <span class="hide-sm">Избранное</span></a>
-        <a class="nav-link" href="{% url 'my_bookings' %}">🧳 <span class="hide-sm">Мои брони</span></a>
-        {% if user.is_host %}
-          <a class="nav-link" href="{% url 'host_dashboard' %}">📋 <span class="hide-sm">Кабинет хоста</span></a>
-        {% else %}
-          <a class="nav-link" href="{% url 'become_host' %}">✨ <span class="hide-sm">Стать хостом</span></a>
+
+    <!-- Бургер (только на мобиле) -->
+    <label for="navToggle" class="nav-burger" aria-label="Меню">
+      <span></span><span></span><span></span>
+    </label>
+
+    <!-- Меню: на десктопе в строке, на мобиле — выпадающая панель -->
+    <div class="nav-collapse">
+      <nav class="nav-menu">
+        <a class="nav-link" href="{% url 'home' %}">🔍 <span class="nav-label">Поиск</span></a>
+        {% if user.is_authenticated %}
+          <a class="nav-link" href="{% url 'favorites' %}">❤️ <span class="nav-label">Избранное</span></a>
+          <a class="nav-link" href="{% url 'my_bookings' %}">🧳 <span class="nav-label">Мои брони</span></a>
+          {% if user.is_host %}
+            <a class="nav-link" href="{% url 'host_dashboard' %}">📋 <span class="nav-label">Кабинет хоста</span></a>
+          {% else %}
+            <a class="nav-link" href="{% url 'become_host' %}">✨ <span class="nav-label">Стать хостом</span></a>
+          {% endif %}
         {% endif %}
-      {% endif %}
-    </nav>
-    <div class="nav-right">
-      {% if user.is_authenticated %}
-        <a class="nav-user" href="{% url 'profile' %}" title="Мой профиль" style="text-decoration:none">
-          <span class="avatar">{{ user.first_name|first|default:user.username|first|upper }}</span>
-          <span class="hide-sm">{{ user.first_name|default:user.username }}</span>
-        </a>
-        <form action="{% url 'logout' %}" method="post" style="margin:0">{% csrf_token %}
-          <button class="btn btn-ghost btn-sm">Выйти</button>
-        </form>
-      {% else %}
-        <a class="nav-link" href="{% url 'login' %}">Войти</a>
-        <a class="btn btn-sm" href="{% url 'signup' %}">Регистрация</a>
-      {% endif %}
+      </nav>
+      <div class="nav-right">
+        {% if user.is_authenticated %}
+          <a class="nav-user" href="{% url 'profile' %}" title="Мой профиль">
+            <span class="avatar">{{ user.first_name|first|default:user.username|first|upper }}</span>
+            <span class="nav-label">{{ user.first_name|default:user.username }}</span>
+          </a>
+          <form action="{% url 'logout' %}" method="post" style="margin:0">{% csrf_token %}
+            <button class="btn btn-ghost btn-sm">Выйти</button>
+          </form>
+        {% else %}
+          <a class="nav-link" href="{% url 'login' %}">Войти</a>
+          <a class="btn btn-sm" href="{% url 'signup' %}">Регистрация</a>
+        {% endif %}
+      </div>
     </div>
   </div>
 </header>

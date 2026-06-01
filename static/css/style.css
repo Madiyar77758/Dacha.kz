@@ -31,22 +31,64 @@ img{display:block}
 /* ===== Header ===== */
 header.nav{
   position:sticky;top:0;z-index:100;
-  background:rgba(255,255,255,.82);backdrop-filter:blur(12px);
+  background:rgba(255,255,255,.92);backdrop-filter:blur(12px);
   border-bottom:1px solid var(--line);
 }
-.nav-inner{display:flex;align-items:center;gap:6px;height:70px;overflow:hidden}
-.logo{font-weight:800;font-size:23px;color:var(--green-d);letter-spacing:-.03em;display:flex;align-items:center;gap:7px;flex:0 0 auto}
+.nav-inner{display:flex;align-items:center;gap:6px;height:66px}
+.logo{font-weight:800;font-size:22px;color:var(--green-d);letter-spacing:-.03em;display:flex;align-items:center;gap:7px;flex:0 0 auto}
 .logo:hover{text-decoration:none;opacity:.85}
 .logo .mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--green),var(--accent));display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:16px}
 .logo span{color:var(--accent)}
+
+.nav-collapse{display:flex;align-items:center;flex:1;min-width:0}
 .nav-menu{display:flex;align-items:center;gap:4px;margin-left:auto}
 .nav-right{display:flex;align-items:center;gap:10px;margin-left:12px;padding-left:14px;border-left:1px solid var(--line)}
 .nav-link{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-weight:600;font-size:14.5px;
   color:var(--text);padding:9px 13px;border-radius:10px;transition:background .15s,color .15s}
 .nav-link:hover{background:var(--green-l);color:var(--green-d);text-decoration:none}
-.nav-user{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:var(--text)}
-.avatar{width:32px;height:32px;border-radius:50%;background:var(--green);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
-@media(max-width:680px){.nav-link span.hide-sm{display:none}}
+.nav-user{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:var(--text);text-decoration:none}
+.nav-user:hover{text-decoration:none;color:var(--green-d)}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--green);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:0 0 auto}
+
+/* Бургер скрыт на десктопе */
+.nav-burger{display:none}
+
+/* ===== Мобильная навигация ===== */
+@media(max-width:760px){
+  .nav-burger{
+    display:flex;flex-direction:column;justify-content:center;gap:5px;
+    width:42px;height:42px;margin-left:auto;border-radius:10px;cursor:pointer;
+    border:1.5px solid var(--line);background:#fff;flex:0 0 auto;
+  }
+  .nav-burger span{display:block;height:2.5px;width:20px;margin:0 auto;background:var(--text);border-radius:2px;transition:.25s}
+
+  /* Выпадающая панель */
+  .nav-collapse{
+    position:absolute;top:66px;left:0;right:0;
+    flex-direction:column;align-items:stretch;
+    background:#fff;border-bottom:1px solid var(--line);
+    box-shadow:0 12px 24px rgba(0,0,0,.10);
+    padding:10px 16px 16px;gap:4px;
+    max-height:0;overflow:hidden;opacity:0;pointer-events:none;
+    transition:max-height .28s ease,opacity .2s,padding .28s;
+  }
+  .nav-toggle-cb:checked ~ .nav-inner .nav-collapse{
+    max-height:80vh;opacity:1;pointer-events:auto;
+  }
+  /* Анимация бургера в крестик */
+  .nav-toggle-cb:checked ~ .nav-inner .nav-burger span:nth-child(1){transform:translateY(7.5px) rotate(45deg)}
+  .nav-toggle-cb:checked ~ .nav-inner .nav-burger span:nth-child(2){opacity:0}
+  .nav-toggle-cb:checked ~ .nav-inner .nav-burger span:nth-child(3){transform:translateY(-7.5px) rotate(-45deg)}
+
+  .nav-menu{flex-direction:column;align-items:stretch;width:100%;gap:2px;margin:0}
+  .nav-menu .nav-link{font-size:16px;padding:13px 14px;border-radius:12px}
+  .nav-right{flex-direction:column;align-items:stretch;width:100%;
+    margin:8px 0 0;padding:10px 0 0;border-left:none;border-top:1px solid var(--line);gap:8px}
+  .nav-right .nav-user{padding:10px 14px;border-radius:12px;background:var(--green-l);font-size:16px}
+  .nav-right .nav-link{font-size:16px;padding:13px 14px}
+  .nav-right form,.nav-right .btn{width:100%}
+  .nav-right .btn{padding:13px;font-size:16px}
+}
 
 /* ===== Buttons ===== */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
